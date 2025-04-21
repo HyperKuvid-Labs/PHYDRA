@@ -37,7 +37,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Cloning repository: $REPO_URL"
-git clone --depth 1 "$REPO_URL" "$TEMP_DIR"
+git clone --depth 1 --branch docker_fix "$REPO_URL" "$TEMP_DIR"
 
 echo "Building Docker image"
 docker build -t cargo-management-system "$TEMP_DIR"
