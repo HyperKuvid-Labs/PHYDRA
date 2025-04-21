@@ -47,7 +47,7 @@ CONTAINER_ID=$(docker run -d -p $PORT:$PORT cargo-management-system)
 echo "Container started with ID: $CONTAINER_ID"
 
 echo "Waiting for server to start..."
-for i in {1..10}; do
+for i in {1..20}; do
     if curl -s "http://localhost:$PORT/" > /dev/null; then
         echo "Server is up and running!"
         break
