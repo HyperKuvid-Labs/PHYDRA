@@ -35,7 +35,7 @@ COPY backend /app/backend
 COPY prisma /app/prisma
 
 # Generate Prisma client
-RUN prisma generate --schema=prisma/schema.prisma
+RUN prisma db push --schema=prisma/schema.prisma
 
 # Expose the application port
 EXPOSE 8000
@@ -46,4 +46,4 @@ EXPOSE 8000
 
 # Run the FastAPI server using Uvicorn
 # CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD ["python3", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python3", "-m", "uvicorn", "backend.main:app"]
