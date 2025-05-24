@@ -54,8 +54,9 @@ export default function Navbar() {
           {/* Main navigation bar */}
           <div className="flex items-center justify-between px-6 py-3 rounded-t-3xl border border-white/5 bg-gradient-to-r from-[#15112b]/70 to-[#1a1535]/70">
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03 }} // Slightly more subtle hover
+              whileTap={{ scale: 0.92 }}   // More responsive tap
+              transition={{ duration: 0.2 }} // Faster transition for tap and hover
               className="text-white font-bold text-xl relative group cursor-pointer"
             >
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#f48599] to-[#f05672]">
@@ -67,7 +68,8 @@ export default function Navbar() {
               />
             </motion.div>
 
-            <div className="flex items-center gap-3 md:gap-4 lg:gap-6">
+            <div className="flex items-center flex-wrap justify-end gap-3 md:gap-4 lg:gap-6"> 
+              {/* Added flex-wrap and justify-end for better wrapping behavior */}
               <NavButton
                 onClick={() => handleButtonClick("simulate")}
                 icon={<Calendar className="mr-2 h-5 w-5" />}
@@ -115,20 +117,48 @@ export default function Navbar() {
                     <X size={16} />
                   </motion.button>
 
-                  {activeButton === "simulate" && (
-                    <SimulateDaysContent
-                      numberOfDays={numberOfDays}
-                      setNumberOfDays={setNumberOfDays}
-                      onSubmit={handleSimulateSubmit}
-                      gradient="from-[#f48599] to-[#f05672]"
-                    />
-                  )}
+                  <AnimatePresence mode="wait">
+                    {activeButton === "simulate" && (
+                      <motion.div
+                        key="simulate"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <SimulateDaysContent
+                          numberOfDays={numberOfDays}
+                          setNumberOfDays={setNumberOfDays}
+                          onSubmit={handleSimulateSubmit}
+                          gradient="from-[#f48599] to-[#f05672]"
+                        />
+                      </motion.div>
+                    )}
 
-                  {activeButton === "msgbox" && <MsgBoxContent />}
+                    {activeButton === "msgbox" && (
+                      <motion.div
+                        key="msgbox"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <MsgBoxContent />
+                      </motion.div>
+                    )}
 
-                  {activeButton === "upload" && (
-                    <UploadCSVContent gradient="from-[#f48599] via-[#f05672] to-[#f48599]" />
-                  )}
+                    {activeButton === "upload" && (
+                      <motion.div
+                        key="upload"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <UploadCSVContent gradient="from-[#f48599] via-[#f05672] to-[#f48599]" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </motion.div>
             )}
@@ -144,34 +174,42 @@ const NavButton = ({ onClick, icon, text, gradient, isActive }) => {
     <motion.button
       onClick={onClick}
       className={`relative flex items-center px-5 py-2.5 rounded-full bg-[#1a1535] text-white text-sm font-medium transition-all ${
-        isActive ? "bg-opacity-80 ring-2 ring-white/20" : "hover:bg-opacity-70"
+        isActive ? "bg-opacity-90 ring-2 ring-white/30" : "hover:bg-opacity-70"
       }`}
-      whileHover={{ scale: isActive ? 1 : 1.07 }}
-      whileTap={{ scale: isActive ? 1 : 0.95 }}
+      whileHover={{ scale: isActive ? 1.03 : 1.1 }}
+      whileTap={{ scale: 0.92 }}
       aria-expanded={isActive}
     >
       <motion.div
-        className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 hover:opacity-10 rounded-full`}
+        className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-full`}
         initial={{ opacity: 0 }}
-        animate={{ opacity: isActive ? 0.15 : 0 }}
-        whileHover={{ opacity: 0.15 }}
+        animate={{ opacity: isActive ? 0.25 : 0 }}
+        whileHover={{ opacity: isActive ? 0.25 : 0.2 }}
         transition={{ duration: 0.3 }}
       />
       <motion.div
-        className="absolute -inset-px rounded-full opacity-0 hover:opacity-100"
+        className="absolute -inset-px rounded-full opacity-0" // Keep base opacity 0, rely on whileHover for shimmer
         style={{
-          background: `linear-gradient(90deg, transparent, rgba(244, 133, 153, 0.3), transparent)`,
+          background: `linear-gradient(90deg, transparent, rgba(244, 133, 153, 0.4), transparent)`, // Slightly more visible shimmer
           backgroundSize: "200% 100%",
         }}
-        animate={{
+        animate={isActive ? {} : { // Only animate shimmer if not active
           backgroundPosition: ["100% 0%", "-100% 0%"],
         }}
-        transition={{
+        transition={isActive ? {} : { // Only animate shimmer if not active
           duration: 1.5,
           repeat: Number.POSITIVE_INFINITY,
           ease: "linear",
         }}
-      />
+      >
+        {/* This motion.div is for the shimmer effect, we make it appear on hover */}
+        <motion.div 
+          className="absolute inset-0"
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3}}
+        />
+      </motion.div>
       <div className="relative z-10 flex items-center">
         {icon}
         {text}
@@ -275,26 +313,7 @@ const SimulateDaysContent = ({
           >
             {isLoading ? (
               <span className="flex items-center">
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
+                <LoadingSpinner className="-ml-1 mr-2 h-4 w-4" />
                 Simulating...
               </span>
             ) : (
@@ -585,26 +604,7 @@ const UploadCSVContent = ({ gradient }) => {
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                    <LoadingSpinner className="-ml-1 mr-2 h-4 w-4" />
                     Uploading...
                   </span>
                 ) : (
@@ -640,26 +640,7 @@ const UploadCSVContent = ({ gradient }) => {
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                    <LoadingSpinner className="-ml-1 mr-2 h-4 w-4" />
                     Uploading...
                   </span>
                 ) : (
@@ -729,3 +710,26 @@ function CustomButton({ onClick, children, gradient, className = "" }) {
     </motion.button>
   );
 }
+
+const LoadingSpinner = ({ className = "h-4 w-4" }) => (
+  <svg
+    className={`animate-spin text-white ${className}`}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    ></circle>
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    ></path>
+  </svg>
+);

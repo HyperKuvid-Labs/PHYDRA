@@ -12,7 +12,7 @@ const ContainerDashboard = ({ zoneName, zoneImgUrl }) => {
   const [selectedContainer, setSelectedContainer] = useState(null); // State for selected container
 
   const formattedZoneName = zoneName.replace(" ", "_");
-  console.log("zoneName", formattedZoneName);
+  // console.log("zoneName", formattedZoneName); // Removed console log
 
   const fetchContainers = async () => {
     setLoading(true);
@@ -31,7 +31,7 @@ const ContainerDashboard = ({ zoneName, zoneImgUrl }) => {
         }
       );
       if (response.data.Response === "Success") {
-        console.log(response.data.Containers);
+        // console.log(response.data.Containers); // Removed console log
         setContainers(response.data.Containers);
       } else {
         setError("Failed to fetch containers");
@@ -122,7 +122,7 @@ const ContainerDashboard = ({ zoneName, zoneImgUrl }) => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Zone Info */}
           <motion.div
-            className="w-full lg:w-1/3 bg-[#1e1a3c] rounded-2xl p-6 shadow-xl border border-[#f48599]/20"
+            className="w-full lg:w-1/3 bg-[#1e1a3c] rounded-2xl p-6 shadow-xl border border-[#f48599]/20" // Keeping sections as rounded-2xl
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -140,7 +140,7 @@ const ContainerDashboard = ({ zoneName, zoneImgUrl }) => {
 
           {/* Container List */}
           <motion.div
-            className="w-full lg:w-2/3 bg-[#1e1a3c] rounded-2xl p-6 shadow-xl border border-[#f48599]/20"
+            className="w-full lg:w-2/3 bg-[#1e1a3c] rounded-2xl p-6 shadow-xl border border-[#f48599]/20" // Keeping sections as rounded-2xl
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -149,32 +149,38 @@ const ContainerDashboard = ({ zoneName, zoneImgUrl }) => {
               Containers
             </h2>
             {loading ? (
-              <div className="flex justify-center items-center h-32">
-                <div className="relative w-10 h-10">
-                  <div className="absolute inset-0 rounded-full border-2 border-[#f48599]/20 border-t-[#f48599] animate-spin"></div>
-                </div>
+              <div className="flex flex-col justify-center items-center h-32 text-center"> {/* Added flex-col for text below spinner */}
+                <div className="w-6 h-6 border-2 border-[#f48599]/50 border-t-[#f48599] rounded-full animate-spin"></div>
+                <span className="ml-2 text-[#f48599]/80 text-sm mt-2">Loading containers...</span> {/* Added text, mt-2 */}
               </div>
             ) : error ? (
-              <div className="text-red-500">{error}</div>
+              <motion.div 
+                className="text-red-400 bg-red-500/10 p-3 rounded-lg text-center"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {error}
+              </motion.div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <AnimatePresence>
                   {containers.map((container) => (
                     <motion.div
                       key={container}
-                      className="bg-[#15112b] rounded-2xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
+                      className="bg-[#15112b] rounded-xl p-5 shadow-lg transition-shadow duration-300 flex flex-col" // Changed to rounded-xl
                       variants={containerVariants}
                       initial="hidden"
                       animate="visible"
                       exit="exit"
+                      whileHover={{ scale: 1.03, boxShadow: "0px 10px 20px rgba(0,0,0,0.2)" }} // Added whileHover
                     >
                       <h3 className="text-lg font-medium text-[#f8b4c0] mb-2">
                         {container}
                       </h3>
                       <motion.button
-                        whileHover={{ scale: 1.05, backgroundColor: "#f05672" }}
+                        whileHover={{ scale: 1.05, backgroundColor: "#f05672" }} // Note: backgroundColor on gradient
                         whileTap={{ scale: 0.95 }}
-                        className="bg-[#f48599] text-white font-bold py-2 px-4 rounded-xl self-start"
+                        className="bg-[#f48599] text-white font-bold py-2 px-4 rounded-lg self-start" // Changed to rounded-lg
                         onClick={() => setSelectedContainer(container)} // Open modal with container ID
                       >
                         View Items
@@ -199,7 +205,7 @@ const ContainerDashboard = ({ zoneName, zoneImgUrl }) => {
             onClick={closeModal}
           >
             <motion.div
-              className="bg-[#1e1a3c] rounded-lg shadow-2xl w-[400px] overflow-hidden"
+              className="bg-[#1e1a3c] rounded-xl shadow-2xl w-full max-w-md overflow-hidden" // Changed to rounded-xl, responsive modal width
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
