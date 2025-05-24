@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion"; // Import motion and AnimatePresence
 
 const ItemDashboard = ({ containerIdx }) => {
   const [items, setItems] = useState([]);
@@ -13,7 +14,7 @@ const ItemDashboard = ({ containerIdx }) => {
       const response = await axios.get("http://localhost:8000/api/get-items", {
         params: { containerId: containerIdx },
       });
-      console.log("API Response:", response.data); // Debug response
+      // console.log("API Response:", response.data); // Debug response
       if (response.data.Response === "Success") {
         if (Array.isArray(response.data.items)) {
           setItems(response.data.items);
@@ -21,14 +22,14 @@ const ItemDashboard = ({ containerIdx }) => {
             setError("No items in container");
           }
         } else {
-          console.error("Items is not an array:", response.data.items);
+          // console.error("Items is not an array:", response.data.items);
           setError("Invalid data format received");
         }
       } else {
         setError("Failed to fetch items");
       }
     } catch (err) {
-      console.error("Fetch error:", err);
+      // console.error("Fetch error:", err);
       setError("Failed to load items");
     } finally {
       setLoading(false);
@@ -43,14 +44,14 @@ const ItemDashboard = ({ containerIdx }) => {
           params: { itemId },
         }
       );
-      console.log("Item details response:", response.data);
+      // console.log("Item details response:", response.data);
 
       if (response.data.Response === "Success") {
         setItemDetails(response.data.Item);
         setSelectedItem(itemId);
       }
     } catch (err) {
-      console.error("Error fetching item details:", err);
+      // console.error("Error fetching item details:", err);
     }
   };
 
@@ -66,30 +67,64 @@ const ItemDashboard = ({ containerIdx }) => {
   };
 
   useEffect(() => {
-    console.log("Container ID:", containerIdx); // Debug containerIdx
+    // console.log("Container ID:", containerIdx); // Debug containerIdx
     if (containerIdx) fetchItems();
   }, [containerIdx]);
 
   // Debug render
-  console.log("Current items:", items);
-  console.log("Loading:", loading);
-  console.log("Error:", error);
+  // console.log("Current items:", items);
+  // console.log("Loading:", loading);
+  // console.log("Error:", error);
 
-  if (loading)
-    return <div className="text-[#ffffff] text-center">Loading...</div>;
-  if (error) return <div className="text-[#f05672] text-center">{error}</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32 bg-[#15112b] p-2 rounded-lg w-full">
+        <div className="w-6 h-6 border-2 border-[#f48599]/50 border-t-[#f48599] rounded-full animate-spin"></div>
+        <span className="ml-2 text-[#f48599]/80 text-sm">Loading items...</span>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <motion.div 
+        className="text-red-400 bg-red-500/10 p-3 rounded-lg text-center mx-2"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        {error}
+      </motion.div>
+    );
+  }
 
   return (
-    <div className="bg-[#15112b] p-2 rounded-lg w-full max-h-[500px]">
+    <div className="bg-[#15112b] p-2 rounded-xl w-full max-h-[500px]"> {/* Changed to rounded-xl */}
       <h2 className="text-lg text-[#ffffff] font-bold mb-2 px-2">
         Items in Container {containerIdx}
       </h2>
 
-      <div className="space-y-1.5 overflow-y-auto max-h-[400px] pr-2">
+      <motion.div 
+        className="space-y-1.5 overflow-y-auto max-h-[400px] pr-2"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.05, // Stagger effect for item appearance
+            },
+          },
+        }}
+        initial="hidden"
+        animate="visible"
+      >
         {items.map((item) => (
-          <div
+          <motion.div
             key={item.itemId}
-            className="bg-[#f48599] rounded-lg p-2 transition-all duration-200"
+            className="bg-[#f48599] rounded-md p-2" // Changed to rounded-md
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 },
+            }}
+            layout // Enable layout animation for smoother reordering if list changes
           >
             <div className="flex justify-between items-center">
               <div className="text-[#15112b] min-w-0 flex-1 mr-2">
@@ -98,19 +133,28 @@ const ItemDashboard = ({ containerIdx }) => {
                 </div>
                 <div className="text-xs opacity-75">ID: {item.itemId}</div>
               </div>
-              <button
+              <motion.button
                 onClick={() => toggleItemDetails(item.itemId)}
-                className="px-2 py-1 bg-[#15112b] text-white text-xs rounded hover:bg-opacity-80 whitespace-nowrap"
+                className="px-2 py-1 bg-[#15112b] text-white text-xs rounded-md whitespace-nowrap" // Changed to rounded-md
+                whileHover={{ backgroundColor: "#2a2356" }} // Darken button on hover
+                whileTap={{ scale: 0.95 }}
               >
                 {selectedItem === item.itemId ? "Hide" : "View"}
-              </button>
+              </motion.button>
             </div>
 
-            {selectedItem === item.itemId && itemDetails && (
-              <div className="mt-2 pt-2 border-t border-[#15112b]/10">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[#15112b]">
-                  <div className="flex items-center">
-                    <span className="opacity-75 mr-1">Mass:</span>
+            <AnimatePresence>
+              {selectedItem === item.itemId && itemDetails && (
+                <motion.div
+                  className="mt-2 pt-2 border-t border-[#15112b]/10 overflow-hidden" // Added overflow-hidden for height animation
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[#15112b]">
+                    <div className="flex items-center">
+                      <span className="opacity-75 mr-1">Mass:</span>
                     <span>{itemDetails.mass}kg</span>
                   </div>
                   <div className="flex items-center">

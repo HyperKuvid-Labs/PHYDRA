@@ -14,14 +14,14 @@ import {
 } from "lucide-react";
 import ContainerDashboard from "./containerThing";
 
-export default function SpaceZonesDashboard({ setZoneData }) {
+export default function SpaceZonesDashboard({ setActiveZone }) { // Changed prop to setActiveZone as per allThings.jsx
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedZone, setSelectedZone] = useState(null);
-  const [selectedZoneData, setSelectedZoneData] = useState(null);
+  const [selectedZone, setSelectedZone] = useState(null); // Used to trigger modal and pass data
+  // const [selectedZoneData, setSelectedZoneData] = useState(null); // This seems unused
   const cardsRef = useRef(null);
-  const starsRef = useRef(null);
+  // const starsRef = useRef(null); // This ref is not assigned to any JSX element for main background stars
 
   // Static Zone Data with Image URLs
   const staticZones = [
@@ -205,22 +205,6 @@ export default function SpaceZonesDashboard({ setZoneData }) {
     return <Rocket {...iconProps} />;
   };
 
-  // Create animated stars in the background
-  useEffect(() => {
-    if (starsRef.current) {
-      const stars = starsRef.current.children;
-      gsap.to(stars, {
-        opacity: 0.8,
-        stagger: 0.05,
-        repeat: -1,
-        yoyo: true,
-        duration: 2,
-        ease: "sine.inOut",
-        repeatDelay: 0.5,
-      });
-    }
-  }, []);
-
   // Initialize zones with API data
   useEffect(() => {
     const fetchZones = async () => {
@@ -254,72 +238,41 @@ export default function SpaceZonesDashboard({ setZoneData }) {
           });
 
           setZones(matchedZones);
-          setZoneData(
-            matchedZones.map((zone) => ({
-              zoneName: zone.name,
-              zoneImgUrl: zone.imageUrl,
-            }))
-          );
+          // Removed call to onZonesDataFetched
         }
         setLoading(false);
       } catch (error) {
         console.warn("Error fetching zones, using default 16 zones:", error);
         const default16Zones = staticZones.slice(0, 16);
         setZones(default16Zones);
-        setZoneData(
-          default16Zones.map((zone) => ({
-            zoneName: zone.name,
-            zoneImgUrl: zone.imageUrl,
-          }))
-        );
+        // Removed call to onZonesDataFetched
         setLoading(false);
       }
     };
 
     fetchZones();
-  }, [setZoneData]);
+  }, []); // Removed onZonesDataFetched from dependency array
 
-  // Animate cards when they load
-  useEffect(() => {
-    if (!loading && zones.length > 0 && cardsRef.current) {
-      const cards = cardsRef.current.children;
-      gsap.fromTo(
-        cards,
-        {
-          y: 50,
-          opacity: 0,
-        },
-        {
-          y: 0,
-          opacity: 1,
-          stagger: 0.1,
-          duration: 0.8,
-          ease: "power3.out",
-        }
-      );
-    }
-  }, [loading, zones]);
-
-  // Generate random stars for background
-  const generateStars = () => {
-    const stars = [];
-    for (let i = 0; i < 100; i++) {
-      const size = Math.random() * 2 + 1;
-      stars.push(
-        <div
-          key={i}
-          className="absolute rounded-full bg-white opacity-0"
-          style={{
-            width: `${size}px`,
-            height: `${size}px`,
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-          }}
-        />
-      );
-    }
-    return stars;
-  };
+  // Animate cards when they load - This GSAP animation is removed as ZoneCard now handles its own animation with stagger via delay.
+  // useEffect(() => {
+  //   if (!loading && zones.length > 0 && cardsRef.current) {
+  //     const cards = cardsRef.current.children;
+  //     gsap.fromTo(
+  //       cards,
+  //       {
+  //         y: 50,
+  //         opacity: 0,
+  //       },
+  //       {
+  //         y: 0,
+  //         opacity: 1,
+  //         stagger: 0.1,
+  //         duration: 0.8,
+  //         ease: "power3.out",
+  //       }
+  //     );
+  //   }
+  // }, [loading, zones]);
 
   return (
     <div className="h-full min-w-screen bg-transparent text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -367,14 +320,10 @@ export default function SpaceZonesDashboard({ setZoneData }) {
         </motion.div>
         {/* Loading and Error Handling */}
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 rounded-full border-2 border-[#f48599]/20 border-t-[#f48599]  animate-spin"></div>
-              <div className="absolute inset-3 rounded-full border-2 border-[#f8b4c0]/20 border-b-[#f8b4c0] animate-spin animation-delay-150"></div>
-            </div>
-            <div className="ml-4 text-[#f48599]">
-              Establishing connection...
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+            {Array.from({ length: 8 }).map((_, index) => ( // Show 8 skeleton cards
+              <SkeletonCard key={index} />
+            ))}
           </div>
         ) : error ? (
           <div className="bg-red-500/20 text-red-200 p-6 rounded-lg text-center border border-red-500/30 max-w-md mx-auto">
@@ -394,24 +343,39 @@ export default function SpaceZonesDashboard({ setZoneData }) {
             <AnimatePresence>
               {zones.map((zone, index) => (
                 <ZoneCard
-                  key={zone.name}
+                  key={zone.name} // Ensure key is stable and unique
                   zone={zone}
                   icon={getZoneIcon(zone.name)}
                   index={index}
+                  setSelectedZone={setSelectedZone} // Pass setSelectedZone to ZoneCard
                 />
               ))}
             </AnimatePresence>
           </motion.div>
         )}
       </div>
+
+      {/* Modal using AnimatePresence and selectedZone state */}
+      <AnimatePresence>
+        {selectedZone && (
+          <ModalContent
+            zone={selectedZone}
+            onClose={() => setSelectedZone(null)} // This uses the local selectedZone state
+            // If setActiveZone from parent was intended to be called here, it would be:
+            // onClose={() => { setSelectedZone(null); if (setActiveZone) setActiveZone(null); }}
+            // But current logic is local modal closure.
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function ZoneCard({ zone, icon, index }) {
+// Note: setSelectedZone is now a prop for ZoneCard
+function ZoneCard({ zone, icon, index, setSelectedZone }) {
   const {
     name,
-    imageUrl,
+    //imageUrl, // Part of zone object
     moduleId,
     temperature,
     pressure,
@@ -420,180 +384,236 @@ function ZoneCard({ zone, icon, index }) {
   } = zone;
   const statusColor =
     status === "Nominal" ? "text-green-400" : "text-yellow-400";
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const starsRef = useRef(null);
+  // const [isModalOpen, setIsModalOpen] = useState(false); // Modal state managed by selectedZone in parent
+  const modalStarsRef = useRef(null); // For stars inside the modal if ModalContent is part of ZoneCard
 
-  // GSAP Star Animation
+  // GSAP Star Animation for Modal (will be moved to ModalContent if it's separate)
+  // For now, assuming ModalContent might be defined within ZoneCard or called differently.
+  // If ModalContent is fully separate, this useEffect should go with it.
   useEffect(() => {
-    if (isModalOpen && starsRef.current) {
-      const stars = starsRef.current.children;
+    // This effect is problematic if ModalContent is separate and relies on isModalOpen
+    // It should be tied to selectedZone or ModalContent's own lifecycle.
+    // For now, commenting out as it depends on ModalContent structure
+    /*
+    if (isModalOpen && modalStarsRef.current) { // isModalOpen is no longer defined here
+      const stars = modalStarsRef.current.children;
       gsap.to(stars, {
-        opacity: 0.8,
-        stagger: 0.05,
+        opacity: [0.1, 0.5, 0.1],
+        stagger: 0.1,
         repeat: -1,
         yoyo: true,
-        duration: 2,
+        duration: 4,
         ease: "sine.inOut",
       });
     }
-  }, [isModalOpen]);
+    */
+  }, [selectedZone]); // Adjust dependency if needed
 
   const cardVariants = {
-    initial: { opacity: 0, y: 50, scale: 0.9 },
+    initial: { opacity: 0, y: 20, scale: 0.95 }, // Adjusted initial animation
     animate: {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { duration: 0.4, ease: "easeOut", delay: index * 0.05 }, // Staggered entry
     },
-    exit: {
+    exit: { // Exit animation for card (might not be used if modal overlays)
       opacity: 0,
-      y: 50,
-      scale: 0.9,
-      transition: { duration: 0.3, ease: "easeIn" },
+      y: 20,
+      scale: 0.95,
+      transition: { duration: 0.2, ease: "easeIn" },
     },
-    hover: { scale: 1.05, transition: { duration: 0.2 } },
+    hover: { scale: 1.03, transition: { duration: 0.15 } }, // Slightly more subtle hover
   };
 
-  const ModalContent = () => (
-    <AnimatePresence>
-      {isModalOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-gradient-to-br from-[#15112b] to-[#2a2356] rounded-xl max-w-4xl w-full p-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-[#15112b]/90 rounded-xl p-6 backdrop-blur-lg relative overflow-hidden h-[px]">
-              {/* Animated Stars Background */}
-              <div ref={starsRef} className="absolute inset-0 z-0">
-                {Array.from({ length: 50 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute rounded-full bg-white opacity-0"
-                    style={{
-                      width: `${Math.random() * 2 + 1}px`,
-                      height: `${Math.random() * 2 + 1}px`,
-                      top: `${Math.random() * 100}%`,
-                      left: `${Math.random() * 100}%`,
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="relative z-10 h-full flex flex-col">
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-[#f48599] to-[#f8b4c0] bg-clip-text text-transparent">
-                    {name}
-                  </h2>
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-[#f48599] hover:text-[#f8b4c0] transition-colors"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto">
-                  <ContainerDashboard zoneName={name} zoneImgUrl={imageUrl} />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-
   return (
-    <>
-      <motion.div
-        className="rounded-xl overflow-hidden shadow-lg"
-        variants={cardVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        layoutId={name}
-        whileHover="hover"
-      >
-        <div className="bg-gradient-to-br from-[#f48599] to-[#f05672] p-0.5 rounded-xl">
-          <motion.div
-            className="bg-[#15112b]/90 backdrop-blur-sm rounded-xl h-full flex flex-col"
-            whileHover={{
-              backgroundColor: "rgba(21, 17, 43, 0.7)",
-              transition: { duration: 0.3 },
-            }}
-          >
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-full h-48 object-cover rounded-t-xl"
-            />
+    <motion.div
+      className="rounded-xl overflow-hidden shadow-lg cursor-pointer" // Added cursor-pointer
+      variants={cardVariants}
+      initial="initial" // Will be animated by parent AnimatePresence if direct child, or by its own on mount
+      animate="animate"
+      exit="exit"
+      layoutId={`zone-card-${name}`} // Unique layoutId for shared animation
+      onClick={() => setSelectedZone(zone)} // Set selected zone on click
+      whileHover="hover"
+    >
+      <div className="bg-gradient-to-br from-[#f48599]/80 to-[#f05672]/80 p-0.5 rounded-xl h-full"> {/* Ensure h-full for gradient border */}
+        <motion.div
+          className="bg-[#15112b]/95 backdrop-blur-md rounded-xl h-full flex flex-col" // Ensure h-full
+          // Removed explicit whileHover for background color to simplify
+        >
+          <img
+            src={zone.imageUrl} // Use zone.imageUrl
+            alt={name}
+            className="w-full h-40 object-cover rounded-t-xl" // Adjusted height
+          />
 
-            <div className="p-5 flex-grow">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-[#f8b4c0]">
-                  {name.replace(/_/g, " ")}
-                </h3>
-                <div className="text-[#f48599]">{icon}</div>
-              </div>
-
-              <div className="w-full h-1 bg-gradient-to-r from-[#f05672]/50 to-[#f8b4c0]/50 rounded-full mb-4"></div>
-
-              <div className="flex-1 space-y-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-[#e6e6e6]/70">Module ID:</span>
-                  <span className="font-mono text-[#f8b4c0]">{moduleId}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[#e6e6e6]/70">Temperature:</span>
-                  <span className="font-mono">{temperature}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[#e6e6e6]/70">Pressure:</span>
-                  <span className="font-mono">{pressure}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[#e6e6e6]/70">Oxygen Level:</span>
-                  <span className="font-mono">{oxygenLevel}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[#e6e6e6]/70">Status:</span>
-                  <span className={`font-mono ${statusColor}`}>{status}</span>
-                </div>
-              </div>
+          <div className="p-4 flex-grow"> {/* Adjusted padding */}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-md font-semibold text-[#f8b4c0]"> {/* Adjusted size */}
+                {name.replace(/_/g, " ")}
+              </h3>
+              <div className="text-[#f48599]">{icon}</div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-[#f48599]/20 flex justify-between items-center p-5">
-              <div className="flex items-center">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    status === "Nominal" ? "bg-green-400" : "bg-yellow-400"
-                  } mr-2`}
-                ></div>
-                <span className="text-xs">{status} Report</span>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-gradient-to-r from-[#f05672] to-[#f8b4c0] text-white text-sm font-semibold py-2 px-4 rounded-full hover:opacity-80 transition-opacity"
-              >
-                Details
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
+            <div className="w-full h-px bg-gradient-to-r from-[#f05672]/40 to-[#f8b4c0]/40 rounded-full mb-3"></div> {/* Adjusted thickness and margin */}
 
-      <ModalContent />
-    </>
+            <div className="flex-1 space-y-2 text-xs"> {/* Adjusted spacing and text size */}
+              <div className="flex justify-between items-center">
+                <span className="text-[#e6e6e6]/60">Module ID:</span>
+                <span className="font-mono text-[#f8b4c0]/90">{moduleId}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#e6e6e6]/60">Temperature:</span>
+                <span className="font-mono">{temperature}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#e6e6e6]/60">Pressure:</span>
+                <span className="font-mono">{pressure}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#e6e6e6]/60">Oxygen Level:</span>
+                <span className="font-mono">{oxygenLevel}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#e6e6e6]/60">Status:</span>
+                <span className={`font-mono ${statusColor}`}>{status}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-auto pt-3 border-t border-[#f48599]/15 flex justify-between items-center p-4"> {/* Ensure button is at bottom */}
+            <div className="flex items-center">
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${ // Adjusted size
+                  status === "Nominal" ? "bg-green-400" : "bg-yellow-400"
+                } mr-1.5`}
+              ></div>
+              <span className="text-xs">{status} Report</span>
+            </div>
+            {/* The card itself is clickable, so this button might be redundant if card click opens modal */}
+            {/* If keeping button, it should also call setSelectedZone(zone) */}
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click event
+                setSelectedZone(zone);
+              }}
+              className="bg-gradient-to-r from-[#f05672]/90 to-[#f8b4c0]/90 text-white text-xs font-semibold py-1.5 px-3 rounded-full transition-opacity"
+              whileHover={{ scale: 1.05, filter: "brightness(1.15)" }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Details
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 }
+
+// ModalContent component, separate for clarity and AnimatePresence usage
+function ModalContent({ zone, onClose }) {
+  const modalStarsRef = useRef(null);
+
+  useEffect(() => {
+    if (modalStarsRef.current) {
+      const stars = modalStarsRef.current.children;
+      gsap.to(stars, {
+        opacity: [0.05, 0.3, 0.05], // Even more subtle opacity
+        stagger: 0.2, // Slightly slower stagger for a calmer effect
+        repeat: -1,
+        yoyo: true,
+        duration: 4, // Slightly faster overall cycle
+        ease: "sine.inOut",
+      });
+    }
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+      onClick={onClose} // Close when clicking backdrop
+    >
+      <motion.div
+        layoutId={`zone-card-${zone.name}`} // Match layoutId with ZoneCard
+        initial={{ scale: 0.9, opacity: 0.8 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0.8 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="bg-gradient-to-br from-[#18142f] to-[#2e285e] rounded-xl max-w-3xl w-full shadow-2xl" // Adjusted max-width
+        onClick={(e) => e.stopPropagation()} // Prevent backdrop click through
+      >
+        <div className="bg-[#15112b]/90 rounded-xl p-1 relative overflow-hidden"> {/* Added p-1 for gradient border effect */}
+          <div className="p-5 backdrop-blur-lg"> {/* Inner padding */}
+            {/* Animated Stars Background */}
+            <div ref={modalStarsRef} className="absolute inset-0 z-0 opacity-70"> {/* Overall opacity for stars container */}
+              {Array.from({ length: 25 }).map((_, i) => ( // Reduced number of stars
+                <div
+                  key={i}
+                  className="absolute rounded-full bg-white/70" // Stars are slightly transparent
+                  style={{
+                    width: `${Math.random() * 1.5 + 0.5}px`, // Smaller stars
+                    height: `${Math.random() * 1.5 + 0.5}px`,
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`
+                    // Removed CSS twinkle animation, GSAP will handle opacity changes
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="relative z-10 h-full flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-[#f48599] to-[#f8b4c0] bg-clip-text text-transparent">
+                  {zone.name}
+                </h2>
+                <motion.button
+                  onClick={onClose}
+                  className="text-[#f48599] hover:text-[#f8b4c0] transition-colors p-1.5 rounded-full hover:bg-white/10"
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
+              </div>
+
+              {/* Scrollable Content Area */}
+              {/* Ensure ContainerDashboard itself can be constrained in height or provides scroll */}
+              <div className="flex-1 overflow-y-auto max-h-[calc(80vh-100px)] pr-2"> {/* Example max-height, adjust as needed */}
+                <ContainerDashboard zoneName={zone.name} zoneImgUrl={zone.imageUrl} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// Removed the global CSS keyframes for twinkle
+
+const SkeletonCard = () => (
+  <div className="rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-[#f48599]/80 to-[#f05672]/80 p-0.5">
+    <div className="bg-[#15112b]/95 backdrop-blur-md rounded-xl h-full flex flex-col animate-pulse">
+      <div className="w-full h-40 bg-[#f8b4c0]/10 rounded-t-xl"></div> {/* Image placeholder */}
+      <div className="p-4 flex-grow">
+        <div className="h-4 bg-[#f8b4c0]/20 rounded w-3/4 mb-3"></div> {/* Title placeholder */}
+        <div className="w-full h-px bg-gradient-to-r from-[#f05672]/30 to-[#f8b4c0]/30 rounded-full mb-3"></div>
+        <div className="space-y-2 text-xs">
+          <div className="h-3 bg-[#f8b4c0]/10 rounded w-5/6"></div>
+          <div className="h-3 bg-[#f8b4c0]/10 rounded w-4/6"></div>
+          <div className="h-3 bg-[#f8b4c0]/10 rounded w-5/6"></div>
+          <div className="h-3 bg-[#f8b4c0]/10 rounded w-3/6"></div>
+          <div className="h-3 bg-[#f8b4c0]/10 rounded w-4/6"></div>
+        </div>
+      </div>
+      <div className="mt-auto pt-3 border-t border-[#f48599]/10 flex justify-between items-center p-4">
+        <div className="h-4 bg-[#f8b4c0]/20 rounded w-1/4"></div>
+        <div className="h-8 bg-[#f05672]/50 rounded-full w-1/3"></div> {/* Button placeholder */}
+      </div>
+    </div>
+  </div>
+);
