@@ -1,142 +1,71 @@
-# 🚢 Cargo Stowage Management System — PHYDRA
+# PHYDRA
 
-Welcome aboard _PHYDRA_ — an end-to-end, multi-language _Cargo Stowage Management System_ built with love 💙 for the _ISS Hackathon_. Designed to smartly and efficiently organize cargo using powerful algorithms and a seamless interface!
+PHYDRA is a cargo stowage management system with a FastAPI backend, C++ optimization algorithms, a Vite/React frontend, and Prisma for data modeling.
 
----
+## Stack
 
-## 🌟 Tech Highlights
+- Backend: FastAPI (Python) + C++ algorithm modules
+- Frontend: React + Vite
+- Database: Prisma (MongoDB)
+- Deployment: Docker
 
-- 🧠⚙️ _C++ meets FastAPI_ — Experience lightning-fast cargo arrangement powered by C++ logic, wrapped beautifully with a Python FastAPI backend to offer both brains and brawn in one smooth API layer!
-- 🌐 _Modern Frontend_ — Interactive, responsive, and intuitive UI to visualize and interact with the system like a pro.
-- 🐳 _Dockerized Deployment_ — Ship it anywhere with Docker — portable, efficient, and reliable.
-- 🛢️ _Prisma (Python)_ — Elegant database modeling and ORM for seamless data flow and management.
+## Project Structure
 
----
-
-## 📁 Project Structure
-
-```bash
+```text
 PHYDRA/
-├── .gitignore                 # Keeps your commits clean and tidy
-├── Dockerfile                 # Backend Docker image blueprint
-├── README.md                  # You're reading it 😊
-├── backend/                   # Backend logic and API magic
-│   ├── csv_data/              # Sample input CSV files
-│   ├── final_cpp_codes/       # 🚀 Core C++ algorithms for cargo stowage
-│   ├── main.py                # FastAPI app entry point
-│   └── requirements.txt       # Python dependencies
-├── frontend/                  # 🌐 Modern UI code
-├── prisma/
-│   └── schema.prisma          # Prisma schema for database structure
+├── backend/            # FastAPI app, CSV data, C++ algorithm code
+├── frontend/           # React frontend (Vite)
+├── prisma/             # Prisma schema
+├── Dockerfile          # Backend image
+├── Dockerfile.frontend # Frontend image
+└── compose.yaml        # Multi-service setup
 ```
 
----
-
-## 🚀 Getting Started
-
-### 🔁 Clone the Repository (Shallow Clone Recommended)
-
-> The `.git` file is too large, so it's recommended to clone only the latest version with depth.
+## Quick Start
 
 ```bash
 git clone --depth 1 https://github.com/Mantissagithub/PHYDRA.git
 cd PHYDRA
 ```
 
----
-
-## 🐳 Backend Setup with Docker
-
-### 1️⃣ Build the Docker Image
+### Backend (Docker)
 
 ```bash
-sudo docker build -t phydra .
+docker build -t phydra .
+docker run -d -p 8000:8000 --name phydra-backend phydra
 ```
 
-### 2️⃣ Run the Backend Container
+Backend runs at http://localhost:8000
+
+### Frontend
 
 ```bash
-sudo docker run -d -p 8000:8000 --name phydra-backend phydra
-```
-
-🎯 Your backend is now live at: [http://localhost:8000](http://localhost:8000)
-
----
-
-## 🛢️ Database Setup with Prisma (Python)
-
-> Make sure your `MONGODB_URI` is set in the `.env` file.
-
-### 1️⃣ Create the `.env` File
-
-Navigate to the `prisma` directory and create a `.env` file with the following content:
-
-```bash
-cd prisma
-nano .env
-```
-
-Add the following sample data to the `.env` file:
-
-```env
-MONGODB_URI=<your_mongob_uri>
-```
-
-### 2️⃣ Generate Prisma Client
-
-```bash
-prisma generate
-```
-
-🎉 Database schema is now synced and ready to go!
-
----
-
-## 🌐 Frontend Setup
-
-### 1️⃣ Navigate to Frontend
-
-```bash
-cd frontend/
-```
-
-### 2️⃣ Install Dependencies
-
-```bash
+cd frontend
 npm install
-```
-
-### 3️⃣ Launch Dev Server
-
-```bash
 npm run dev
 ```
 
-✨ Access the frontend at: [http://localhost:5173](http://localhost:5173)
+Frontend runs at http://localhost:5173
 
----
+### Prisma
 
-## ✅ Project Status
+Create `prisma/.env`:
 
-- 🧠 High-performance stowage logic — ✅
-- 🔌 Backend API — ✅
-- 🎨 Frontend UI — ✅
-- 🐳 Docker Deployment — ✅
-- 🛢️ Prisma DB Integration — ✅
+```env
+MONGODB_URI=<your_mongodb_uri>
+```
 
----
+Then generate the client:
 
-## 🤝 Built With Team Spirit
+```bash
+cd prisma
+prisma generate
+```
 
-Crafted during the _ISS Hackathon_ to solve real-world challenges with innovation, collaboration, and joy!  
-We believe in building not just solutions — but delightful experiences.
+## Contributors
 
-## 👥 Contributors
-
-1. Pradheep - [GitHub](https://github.com/Mantissagithub/)
-2. Harish - [GitHub](https://github.com/HARISH20205)
-3. Dalton - [GitHub](https://github.com/Daltonar05)
-4. Rakshith - [GitHub](https://github.com/RAAKISG)
-5. Yuvanesh - [GitHub](https://github.com/YuvaneshSankar)
-
----
+- Pradheep — https://github.com/Mantissagithub/
+- Harish — https://github.com/HARISH20205
+- Dalton — https://github.com/Daltonar05
+- Rakshith — https://github.com/RAAKISG
+- Yuvanesh — https://github.com/YuvaneshSankar
